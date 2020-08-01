@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>글쓰기</title>
+</head>
+<body>
+	<form action="/writeProcess" method="post">
+		<p>
+		title <input type="text" name="title">
+		</p>
+		<p>
+		content <input type-"text" name="content">
+		</p>
+		<p>
+		{% if user%}
+		writer <input type="text" value={{user}} name="writer" readonly>
+		{% endif%}
+		</p>
+		<p>
+		date <input type="date" name="date">
+		</p>
+		<p>
+		<input type="submit" value="확인">
+		</p>
+	</form>
+</body>
+</html>
