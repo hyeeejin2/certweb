@@ -1,0 +1,33 @@
+<html>
+    <head>
+        <title>회원가입 페이지</title>
+        <meta charset="utf-8" >
+    </head>
+    <body>
+         회원가입 페이지<br />
+        <hr />
+
+         <form name="signup_form" method="POST" action="/signupProcess" >
+            아이디 : <input type="text" name="id" /><br />
+            비밀번호 : <input type="password" name="pw" placeholder="비밀번호 10자 이상 입력하세요."/><br />
+	    비밀번호 재확인 : <input type="password" name="check_pw" placeholder="비밀번호 다시 입력하세요."/><br />
+            집주소 : <input type="text" name="addr" placeholder="예) 서울특별시 강남구 역삼동"/><br />
+	    상세주소 : <input type="text" name="detail_addr" placeholder="예) 테헤란로 52길"/><br />
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <!--{{ message }}-->
+        <script>                
+                alert('{{message}}') 
+        </script>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+
+            <input type="submit" value="회원가입" />
+        </form>
+
+    </body>
+</html>

@@ -1,0 +1,31 @@
+<html>
+    <head>
+        <title>index 페이지</title>
+        <meta charset="utf-8" >
+    </head>
+    <body>
+        index 페이지<br />
+        <hr />
+
+         <form name="index_form" method="POST" action="/logout" >
+		 {%if session['username']%}
+		 	userId : {{session['username']}}
+			 <a href="/logout">Logout</a>
+		 {% else %}
+		 	<a href="/login">Login</a>
+		 {% endif %}
+        </form>
+	        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+   
+        <script>
+                alert('{{message}}')
+        </script>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+
+    </body>
+</html>

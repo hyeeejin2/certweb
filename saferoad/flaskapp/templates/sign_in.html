@@ -1,0 +1,31 @@
+<html>
+    <head>
+        <title>로그인 페이지</title>
+        <meta charset="utf-8" >
+    </head>
+    <body>
+        로그인 페이지<br />
+        <hr />
+
+         <form name="login_form" method="POST" action="/loginProcess" >
+            아이디 : <input type="text" name="id" /><br />
+            비밀번호 : <input type="password" name="pw" /><br />
+	     {% with messages = get_flashed_messages() %}
+             {% if messages %}
+             <ul class=flashes>
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+                {% endif %}
+                {% endwith %}
+                {% block body %}{% endblock %}
+
+            <input type="submit" value="로그인"/>
+        </form>
+	 <form name="signup_form" method="POST" action="/signup" >
+		<input type="submit" value="회원가입"/>
+	</form>
+
+    </body>
+</html>
