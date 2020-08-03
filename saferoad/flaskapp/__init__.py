@@ -6,50 +6,109 @@ app.config['DEBUG']=True
 app.config['SESSION_TYPE'] = 'memcached'
 app.config['SECRET_KEY'] = 'redsfsfsfsfis'
 
-@app.route("/write")
+@app.route("/complaint/main")
+def complaint():
+    return render_template('complaint.html')
+
+@app.route("/listProcess")
+def listProcess():
+    if request.method=='GET':
+        kind=request.args.get('kind')
+        db = pymysql.connect(host='127.0.0.1', port=3306, user='saferoad_manager', password='backend1234', db='SAFEROAD_MANAGER', charset='utf8')
+        cursor=db.cursor()
+    
+        query="SELECT POST_NUM, POST_TITLE, USER_ID, POST_DATE, POST_VIEW FROM POST, USER_INFO WHERE N_NUM=%s AND U_NUM=USER_NUM;"
+        value=(kind)
+    
+        cursor.execute(query, value)
+        data=cursor.fetchall()
+
+        cursor.close()
+        db.close()
+
+        datalist=[]
+        no=1
+        for row in data:
+            dic={'no':no, 'post_num':row[0], 'post_title':row[1], 'user_id':row[2], 'post_date':row[3], 'post_view':row[4]}
+            datalist.append(dic)
+            no+=1
+
+        json_datalist={'data':datalist}
+        r=json.dumps(json_datalist)
+        loaded_r=json.loads(r)
+        return loaded_r
+
+@app.route("/complaint/post/<pnum>")
+def get_pnum(pnum):
+    if request.method=='GET':
+        #content
+        if 'username' in session:
+            user='%s' %escape(session['username'])
+            return render_template('complaint_detail.html', user=user)
+        else:
+            return render_template('complaint_detail.html')
+
+@app.route("/complaint/write")
 def write():
     if 'username' in session:
-        return render_template('write.html', user="admin")
+        user='%s' %escape(session['username'])
+        return render_template('complaint_write.html', user=user)
     else:
         return redirect(url_for('index'))
 
 @app.route("/writeProcess", methods=['POST'])
 def writeProcess():
     if 'username' in session:
-        title=request.form['title']
-        content=request.form['content']
-        writer=request.form['writer']
-        date=request.form['date']
+        if request.method=='POST':
+            kind=int(request.form['kind'])
+            title=request.form['title']
+            content=request.form['content']
+            writer=request.form['writer']
+            date=request.form['date']
 
-        db = pymysql.connect(host='127.0.0.1', port=3306, user='saferoad_manager', password='backend1234', db='SAFEROAD_MANAGER', charset='utf8')
-        cursor=db.cursor()
+            db = pymysql.connect(host='127.0.0.1', port=3306, user='saferoad_manager', password='backend1234', db='SAFEROAD_MANAGER', charset='utf8')
+            cursor=db.cursor()
 
-        query="SELECT COUNT(*) FROM POST WHERE N_NUM=1;"
+            query="SELECT COUNT(*) FROM POST WHERE N_NUM=%s;"
+            value=(kind)
 
-        cursor.execute(query)
-        post_num=cursor.fetchall()
+            cursor.execute(query, value)
+            post_num=cursor.fetchall()
 
-        for row in post_num:
-            post_num=row[0]
+            for row in post_num:
+                post_num=row[0]
 
-        query="INSERT INTO POST VALUES(%s, %s, %s, %s, %s, %s, %s);"
-        value=(int(post_num)+1, 1, title, content, 1, date, 0)
+            query="SELECT USER_NUM FROM USER_INFO WHERE USER_ID=%s;"
+            value=(writer)
 
-        cursor.execute(query, value)
-        data=cursor.fetchall()
+            cursor.execute(query, value)
+            u_num=cursor.fetchall()
 
-        if not data:
-            db.commit()
-            cursor.close()
-            db.close()
-            return "success!"
-        else:
-            db.rollback()
-            cursor.close()
-            db.close()
-            return "failed!"
+            for row in u_num:
+                u_num=row[0]
+
+            query="INSERT INTO POST VALUES(%s, %s, %s, %s, %s, %s, %s);"
+            value=(int(post_num)+1, kind, title, content, u_num, date, 0)
+    
+            cursor.execute(query, value)
+            data=cursor.fetchall()
+
+            if not data:
+                db.commit()
+                cursor.close()
+                db.close()
+                return "success!"
+            else:
+                db.rollback()
+                cursor.close()
+                db.close()
+                return "failed!"
     else:
         return redirect(url_for('index'))
+
+@app.route('/deleteProcess', methods=['POST'])
+def deleteProcess():
+    return "test"
 
 @app.route('/index')
 def index():

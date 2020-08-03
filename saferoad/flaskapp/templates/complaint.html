@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>complaint main</title>
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css">
+<link rel="styleshee" href="https://cdn.datatables.net/1.10.21/css/dataTables.bootstrap4.min.css">
+</head>
+<body>
+	<table id="dataTable" class="table table-striped table-bordered" style="width:100%">
+		<thead>
+			<tr>
+				<th>no</th>
+				<th>title</th>
+				<th>wrtier</th>
+				<th>date</th>
+				<th>view</th>
+			</tr>
+		</thead>
+	</table>
+	<a href="/complaint/write">write</a>
+</body>
+<script>
+var table=$('#dataTable').DataTable({
+	ajax:{
+		url:'/listProcess',
+		type:'GET',
+		data:{kind:1
+		},
+		dataSrc:'data'
+	},
+	columns:[{data:'no'},
+		{data:'post_title'},
+		{data:'user_id'},
+		{data:'post_date'},
+		{data:'post_view'},
+		{data:'post_num', visible:false}
+	]
+});
+$('#dataTable').on('click', 'tr', function(){
+	var post_num=table.row(this).data().post_num;
+	location.href=`/complaint/post/${post_num}`;
+});
+</script>
+</html>
