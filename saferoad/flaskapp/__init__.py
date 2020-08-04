@@ -6,8 +6,20 @@ app.config['DEBUG']=True
 app.config['SESSION_TYPE'] = 'memcached'
 app.config['SECRET_KEY'] = 'redsfsfsfsfis'
 
+def permissionCheck(post_num, n_num, user_id):
+    #db = pymysql.connect(host='127.0.0.1', port=3306, user='saferoad_manager', password='backend1234', db='SAFEROAD_MANAGER', charset='utf8')
+    #cursor=db.cursor()
+
+    #query="SELECT;"
+    #value=(int(post_num), n_num, user_id)
+
+    #cursor.execute(query, value)
+    #data=cursor.fetchall()
+
+    return True
+
 @app.route("/complaint/main")
-def complaint():
+def complaint_main():
     return render_template('complaint.html')
 
 @app.route("/listProcess")
@@ -38,18 +50,45 @@ def listProcess():
         loaded_r=json.loads(r)
         return loaded_r
 
-@app.route("/complaint/post/<pnum>")
-def get_pnum(pnum):
+@app.route("/complaint/post/<post_num>")
+def get_pnum(post_num):
     if request.method=='GET':
-        #content
-        if 'username' in session:
-            user='%s' %escape(session['username'])
-            return render_template('complaint_detail.html', user=user)
+        db = pymysql.connect(host='127.0.0.1', port=3306, user='saferoad_manager', password='backend1234', db='SAFEROAD_MANAGER', charset='utf8')
+        cursor=db.cursor()
+
+        query="SELECT POST_NUM FROM POST WHERE POST_NUM=%s AND N_NUM=1;"
+        value=(int(post_num))
+
+        cursor.execute(query, value)
+        data=cursor.fetchall()
+
+        for row in data:
+            data=row[0]
+
+        if data:
+            query="SELECT POST_NUM, POST_TITLE, POST_CONTENT, USER_ID, POST_DATE FROM POST, USER_INFO WHERE POST_NUM=%s AND N_NUM=1 AND U_NUM=USER_NUM;"
+            value=(post_num)
+
+            cursor.execute(query, value)
+            data=cursor.fetchall()
+            
+            cursor.close()
+            db.close()
+
+            if 'username' in session:
+                user='%s' %escape(session['username'])
+                result=permissionCheck(post_num, 1, user)
+                if result:
+                    return render_template('complaint_detail.html', data=data, user=user, access=result)
+                else:
+                    return render_template('complaint_detail.html', data=data, user=user)
+            else:
+                return render_template('complaint_detail.html', data=data)
         else:
-            return render_template('complaint_detail.html')
+            return redirect(url_for('complaint_main'))
 
 @app.route("/complaint/write")
-def write():
+def complaint_write():
     if 'username' in session:
         user='%s' %escape(session['username'])
         return render_template('complaint_write.html', user=user)
@@ -69,7 +108,7 @@ def writeProcess():
             db = pymysql.connect(host='127.0.0.1', port=3306, user='saferoad_manager', password='backend1234', db='SAFEROAD_MANAGER', charset='utf8')
             cursor=db.cursor()
 
-            query="SELECT COUNT(*) FROM POST WHERE N_NUM=%s;"
+            query="SELECT POST_NUM FROM POST WHERE N_NUM=%s;"
             value=(kind)
 
             cursor.execute(query, value)
