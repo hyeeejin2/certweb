@@ -124,6 +124,7 @@ def complaint_write():
 def writeProcess():
     if 'username' in session:
         if request.method=='POST':
+            referrer=request.headers.get('Referer')
             n_num=int(request.form['kind'])
             title=request.form['title']
             content=request.form['content']
@@ -161,12 +162,15 @@ def writeProcess():
                 db.commit()
                 cursor.close()
                 db.close()
-                return redirect(url_for('complaint_main')) # referring
+                if n_num==1:
+                    return redirect(url_for('complaint_main'))
+                elif n_num==2:
+                    return "temp"
             else:
                 db.rollback()
                 cursor.close()
                 db.close()
-                return redirect(url_for('complaint_main')) #referring
+                return redirect(referrer)
     else:
         return redirect(url_for('index'))
 
@@ -178,6 +182,7 @@ def modifyProcess():
 def deleteProcess():
     if 'username' in session:
         if request.method=='POST':
+            referrer=request.headers.get('Referer')
             post_num=int(request.form['post_num'])
             n_num=int(request.form['kind'])
             user='%s' %escape(session['username'])
@@ -195,15 +200,17 @@ def deleteProcess():
                     db.commit()
                     cursor.close()
                     db.close()
-                    #return
+                    if n_num==1:
+                        return redirect(url_for('complaint_main'))
+                    elif n_num==2:
+                        return "temp"
                 else:
                     db.rollback()
                     cursor.close()
                     db.close()
-                    #return
+                    return redirect(referrer)
             else:
-                return "test"
-                #referring
+                return reddirect(referrer)
 
 @app.route('/index')
 def index():
