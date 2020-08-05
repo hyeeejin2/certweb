@@ -7,16 +7,39 @@ app.config['SESSION_TYPE'] = 'memcached'
 app.config['SECRET_KEY'] = 'redsfsfsfsfis'
 
 def permissionCheck(post_num, n_num, user_id):
-    #db = pymysql.connect(host='127.0.0.1', port=3306, user='saferoad_manager', password='backend1234', db='SAFEROAD_MANAGER', charset='utf8')
-    #cursor=db.cursor()
+    db = pymysql.connect(host='127.0.0.1', port=3306, user='saferoad_manager', password='backend1234', db='SAFEROAD_MANAGER', charset='utf8')
+    cursor=db.cursor()
 
-    #query="SELECT;"
-    #value=(int(post_num), n_num, user_id)
+    query="SELECT POST_NUM FROM USER_INFO, POST WHERE USER_ID=%s AND USER_NUM=U_NUM AND POST_NUM=%s AND N_NUM=%s;"
+    value=(user_id, post_num, n_num)
 
-    #cursor.execute(query, value)
-    #data=cursor.fetchall()
+    cursor.execute(query, value)
+    data=cursor.fetchall()
 
-    return True
+    for row in data:
+        data=row[0]
+
+    if data:
+        cursor.close()
+        db.close()
+        return True
+    else:
+        query="SELECT NOTICE_NUM FROM USER_INFO, NOTICE_INFO WHERE USER_ID=%s AND USER_NUM=U_NUM AND NOTICE_NUM=%s;"
+        value=(user_id, n_num)
+
+        cursor.execute(query, value)
+        data=cursor.fetchall()
+
+        cursor.close()
+        db.close()
+
+        for row in data:
+            data=row[0]
+        
+        if data:
+            return True
+        else:
+            return False
 
 @app.route("/complaint/main")
 def complaint_main():
@@ -25,12 +48,12 @@ def complaint_main():
 @app.route("/listProcess")
 def listProcess():
     if request.method=='GET':
-        kind=request.args.get('kind')
+        n_num=request.args.get('kind')
         db = pymysql.connect(host='127.0.0.1', port=3306, user='saferoad_manager', password='backend1234', db='SAFEROAD_MANAGER', charset='utf8')
         cursor=db.cursor()
     
         query="SELECT POST_NUM, POST_TITLE, USER_ID, POST_DATE, POST_VIEW FROM POST, USER_INFO WHERE N_NUM=%s AND U_NUM=USER_NUM;"
-        value=(kind)
+        value=(n_num)
     
         cursor.execute(query, value)
         data=cursor.fetchall()
@@ -77,14 +100,16 @@ def get_pnum(post_num):
 
             if 'username' in session:
                 user='%s' %escape(session['username'])
-                result=permissionCheck(post_num, 1, user)
-                if result:
-                    return render_template('complaint_detail.html', data=data, user=user, access=result)
+                access=permissionCheck(int(post_num), 1, user)
+                if access:
+                    return render_template('complaint_detail.html', data=data, user=user, access=access)
                 else:
                     return render_template('complaint_detail.html', data=data, user=user)
             else:
                 return render_template('complaint_detail.html', data=data)
         else:
+            cursor.close()
+            db.close()
             return redirect(url_for('complaint_main'))
 
 @app.route("/complaint/write")
@@ -99,7 +124,7 @@ def complaint_write():
 def writeProcess():
     if 'username' in session:
         if request.method=='POST':
-            kind=int(request.form['kind'])
+            n_num=int(request.form['kind'])
             title=request.form['title']
             content=request.form['content']
             writer=request.form['writer']
@@ -109,7 +134,7 @@ def writeProcess():
             cursor=db.cursor()
 
             query="SELECT POST_NUM FROM POST WHERE N_NUM=%s;"
-            value=(kind)
+            value=(n_num)
 
             cursor.execute(query, value)
             post_num=cursor.fetchall()
@@ -127,7 +152,7 @@ def writeProcess():
                 u_num=row[0]
 
             query="INSERT INTO POST VALUES(%s, %s, %s, %s, %s, %s, %s);"
-            value=(int(post_num)+1, kind, title, content, u_num, date, 0)
+            value=(int(post_num)+1, n_num, title, content, u_num, date, 0)
     
             cursor.execute(query, value)
             data=cursor.fetchall()
@@ -136,18 +161,49 @@ def writeProcess():
                 db.commit()
                 cursor.close()
                 db.close()
-                return "success!"
+                return redirect(url_for('complaint_main')) # referring
             else:
                 db.rollback()
                 cursor.close()
                 db.close()
-                return "failed!"
+                return redirect(url_for('complaint_main')) #referring
     else:
         return redirect(url_for('index'))
 
+@app.route('/modifyProcess', methods=['POST'])
+def modifyProcess():
+    return "test"
+
 @app.route('/deleteProcess', methods=['POST'])
 def deleteProcess():
-    return "test"
+    if 'username' in session:
+        if request.method=='POST':
+            post_num=int(request.form['post_num'])
+            n_num=int(request.form['kind'])
+            user='%s' %escape(session['username'])
+            if permissionCheck(post_num, n_num, user):
+                db = pymysql.connect(host='127.0.0.1', port=3306, user='saferoad_manager', password='backend1234', db='SAFEROAD_MANAGER', charset='utf8')
+                cursor=db.cursor()
+
+                query="DELETE FROM POST WHERE POST_NUM=%s AND N_NUM=%s;"
+                value=(post_num, n_num)
+
+                cursor.execute(query, value)
+                data=cursor.fetchall()
+
+                if not data:
+                    db.commit()
+                    cursor.close()
+                    db.close()
+                    #return
+                else:
+                    db.rollback()
+                    cursor.close()
+                    db.close()
+                    #return
+            else:
+                return "test"
+                #referring
 
 @app.route('/index')
 def index():
