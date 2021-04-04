@@ -1,0 +1,35 @@
+<html>
+    <head>
+        <title>회원가입</title>
+        <meta charset="utf-8" >
+    </head>
+    <body>
+        회원가입<br/>
+        <hr/>
+         <form id="signup" method="POST" action="/signupProcess" onsubmit="return nullCheck();">
+		 이름 : <input type="text" name="name"/><br/>
+		 아이디 : <input type="text" name="id"/><br/>
+		 비밀번호 : <input type="password" name="pw"/><br/>
+		 <input type="submit" value="회원가입"/>
+        </form>
+    </body>
+<script type ="text/javascript">
+        function nullCheck(){
+                var thisForm=document.getElementById("signup");
+                var count=0;
+                for(var i=0; i<thisForm.length;i++){
+                        if(thisForm[i].value=="" || thisForm[i].value==null){
+                                count++;
+                                break;
+                        }
+                }
+                if(count>0){
+                        alert("빈칸을 채워주세요.");
+                        return false;
+                } else {
+                        return true;
+                }
+        }
+</script>
+</html>
+
